@@ -302,6 +302,7 @@ def create_cisco_config(bucket_name, bucket_key, s3_url, bgp_asn, ssh):
         config_text.append('  neighbor {} as-override'.format(vpn_gateway_tunnel_inside_address_ip_address))
         config_text.append('  neighbor {} soft-reconfiguration inbound'.format(vpn_gateway_tunnel_inside_address_ip_address))
         config_text.append('  neighbor {} next-hop-self'.format(vpn_gateway_tunnel_inside_address_ip_address))
+        config_text.append('  neighbor {} external_prefix out'.format(vpn_gateway_tunnel_inside_address_ip_address))
         config_text.append('exit')
         config_text.append('exit')
 
@@ -309,8 +310,8 @@ def create_cisco_config(bucket_name, bucket_key, s3_url, bgp_asn, ssh):
         tunnelId+=1
 
         
-    vpc_response = client.describe_vpcs()
-    subnet_resposne = client.describe_subnets()
+    vpc_response = boto3.client.describe_vpcs()
+    subnet_resposne = boto3.client.describe_subnets()
     
     vpclist = []
     for vpc in vpc_response["Vpcs"]:
