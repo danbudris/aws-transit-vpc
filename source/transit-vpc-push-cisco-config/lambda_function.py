@@ -309,18 +309,21 @@ def create_cisco_config(bucket_name, bucket_key, s3_url, bgp_asn, ssh):
         #Increment tunnel ID for going onto the next tunnel
         tunnelId+=1
 
-        
-    vpc_response = boto3.client.describe_vpcs()
-    subnet_resposne = boto3.client.describe_subnets()
+    # retrieve the vpcs and subnets for the given account    
+    vpc_response = boto3.client('ec2').describe_vpcs()
+    subnet_resposne = boto3.client('ec2').describe_subnets()
     
+    # generate a list of VPCs from the resposne
     vpclist = []
     for vpc in vpc_response["Vpcs"]:
         vpclist.append(vpc["VpcId"])
         
+    # generate a list of subnet cidrs from the response
     subnetlist = []
     for subnet in subnet_resposne["Subnets"]:
         subnetlist.append(subnet["CidrBlock"])
     
+    # increment over the subnets and add them to the prefix lists
     x = 5
     for subnet in subnetlist:
         config_text.append('  ip prefix-list Campus seq {} permit {}'.format(x, subnet))
