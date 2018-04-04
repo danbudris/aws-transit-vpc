@@ -59,6 +59,14 @@ def updateConfigXML(xml, config, vgwTags, account_id, csr_number):
     newXml.appendChild(xmldoc.createTextNode("delete"))
   transitConfig.appendChild(newXml)
 
+  #Create prefix application block. If the VGW is tagged with 'apply_filter':'true', make true; else false; Controls application of prefix filtering 
+  nexXml = xmldoc.createElement("prefix_filter")
+  if vgwTags["apply_filter"] == "true":
+    newXml.appendChild(xmldoc.createTexNode("true"))
+  else:
+    newXml.appendChild(xmldoc.createTextNode("false"))
+  transitConfig.appendChild(newXml)
+
   #Configure preferred transit VPC path
   newXml = xmldoc.createElement("preferred_path")
   newXml.appendChild(xmldoc.createTextNode(vgwTags.get(config.get('PREFERRED_PATH_TAG', 'none'), 'none')))
@@ -169,6 +177,7 @@ def lambda_handler(event, context):
         log.info('Created Customer Gateways: %s, %s',cg1['CustomerGateway']['CustomerGatewayId'], cg2['CustomerGateway']['CustomerGatewayId'])
 
         #Create and tag first VPN connection
+        # if the VGW is tagged as 'prefix(?)' apply the tag 'prefix(?)' to the vpn connection
         vpn1=ec2.create_vpn_connection(Type='ipsec.1',CustomerGatewayId=cg1['CustomerGateway']['CustomerGatewayId'],VpnGatewayId=vgw['VpnGatewayId'],Options={'StaticRoutesOnly':False})
         ec2.create_tags(Resources=[vpn1['VpnConnection']['VpnConnectionId']],
             Tags=[
@@ -177,6 +186,7 @@ def lambda_handler(event, context):
                 {'Key': 'transitvpc:endpoint','Value': 'CSR1' }
             ])
         #Create and tag second VPN connection
+        # if the VGW is tagged as 'prefix(?)' apply the tag 'prefix(?)' to the vpn conection
         vpn2=ec2.create_vpn_connection(Type='ipsec.1',CustomerGatewayId=cg2['CustomerGateway']['CustomerGatewayId'],VpnGatewayId=vgw['VpnGatewayId'],Options={'StaticRoutesOnly':False})
         ec2.create_tags(Resources=[vpn2['VpnConnection']['VpnConnectionId']],
                     Tags=[

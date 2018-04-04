@@ -172,6 +172,8 @@ def create_cisco_config(bucket_name, bucket_key, s3_url, bgp_asn, ssh):
     vpn_endpoint = vpn_config.getElementsByTagName("vpn_endpoint")[0].firstChild.data
     vpn_status = vpn_config.getElementsByTagName("status")[0].firstChild.data
     preferred_path = vpn_config.getElementsByTagName("preferred_path")[0].firstChild.data
+    #get the prefix tag data to determine application of prefix list to tunnels 
+    apply_prefix = vpn_config.getElementsByTagName("prefix_filter")[0].firstChild.data
 
     #Extract VPN connection information
     vpn_connection=xmldoc.getElementsByTagName('vpn_connection')[0]
@@ -302,29 +304,14 @@ def create_cisco_config(bucket_name, bucket_key, s3_url, bgp_asn, ssh):
         config_text.append('  neighbor {} as-override'.format(vpn_gateway_tunnel_inside_address_ip_address))
         config_text.append('  neighbor {} soft-reconfiguration inbound'.format(vpn_gateway_tunnel_inside_address_ip_address))
         config_text.append('  neighbor {} next-hop-self'.format(vpn_gateway_tunnel_inside_address_ip_address))
-        config_text.append('  neighbor {} external_prefix out'.format(vpn_gateway_tunnel_inside_address_ip_address))
+        # if the vgw is tagged with the prefix application tag, apply the external prefix list
+        if apply_prefix == "true":
+            config_text.append('  neighbor {} external_prefix out'.format(vpn_gateway_tunnel_inside_address_ip_address))
         config_text.append('exit')
         config_text.append('exit')
 
         #Increment tunnel ID for going onto the next tunnel
         tunnelId+=1
-
-        
-    vpc_response = boto3.client.describe_vpcs()
-    subnet_resposne = boto3.client.describe_subnets()
-    
-    vpclist = []
-    for vpc in vpc_response["Vpcs"]:
-        vpclist.append(vpc["VpcId"])
-        
-    subnetlist = []
-    for subnet in subnet_resposne["Subnets"]:
-        subnetlist.append(subnet["CidrBlock"])
-    
-    x = 5
-    for subnet in subnetlist:
-        config_text.append('  ip prefix-list Campus seq {} permit {}'.format(x, subnet))
-        x += 5
         
     log.debug("Conversion complete")
     return config_text
