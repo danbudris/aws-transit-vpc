@@ -306,7 +306,7 @@ def create_cisco_config(bucket_name, bucket_key, s3_url, bgp_asn, ssh):
         config_text.append('  neighbor {} next-hop-self'.format(vpn_gateway_tunnel_inside_address_ip_address))
         # if the vgw is tagged with the prefix application tag, apply the external prefix list
         if apply_prefix == "true":
-            config_text.append('  neighbor {} external_prefix out'.format(vpn_gateway_tunnel_inside_address_ip_address))
+            config_text.append('  neighbor {} prefix-list external out'.format(vpn_gateway_tunnel_inside_address_ip_address))
         config_text.append('exit')
         config_text.append('exit')
 
